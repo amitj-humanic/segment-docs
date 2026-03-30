@@ -1,0 +1,332 @@
+/* ===== Reset & Base ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #2a2a2e;
+  color: #ccc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-y: auto;
+}
+
+/* ===== Toolbar ===== */
+#toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: #1e1e22;
+  border-bottom: 1px solid #444;
+  flex-wrap: wrap;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#toolbar button {
+  padding: 6px 14px;
+  background: #3a3a42;
+  color: #ddd;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+#toolbar button:hover {
+  background: #505060;
+}
+
+#element-type {
+  padding: 5px 8px;
+  background: #3a3a42;
+  color: #ddd;
+  border: 1px solid #555;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+#toolbar label {
+  font-size: 13px;
+  color: #aaa;
+}
+
+.hint {
+  font-size: 11px;
+  color: #888;
+}
+
+#page-indicator, #cursor-position {
+  font-size: 13px;
+  color: #999;
+}
+
+/* ===== Title Page ===== */
+.page {
+  width: 8.5in;
+  min-height: 11in;
+  margin: 24px auto;
+  padding: 1in;
+  background: #fff;
+  color: #000;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+}
+
+.title-page-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 9in;
+  gap: 24px;
+}
+
+.title-field {
+  width: 100%;
+  max-width: 5in;
+  text-align: center;
+}
+
+.title-field label {
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 10pt;
+  color: #666;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.title-field input,
+.title-field textarea {
+  width: 100%;
+  text-align: center;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12pt;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  padding: 4px 0;
+  background: transparent;
+  outline: none;
+}
+
+.title-field input:focus,
+.title-field textarea:focus {
+  border-bottom-color: #0066cc;
+}
+
+.title-field textarea {
+  resize: none;
+  text-align: center;
+}
+
+/* ===== Editor Container ===== */
+#editor-container {
+  padding-bottom: 100px;
+}
+
+/* ===== Script Pages ===== */
+.script-page {
+  width: 8.5in;
+  height: 11in;
+  margin: 24px auto;
+  padding: 1in 1in 0.75in 1.5in;
+  background: #fff;
+  color: #000;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.script-page .page-number {
+  position: absolute;
+  top: 0.5in;
+  right: 1in;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12pt;
+  color: #000;
+}
+
+/* ===== Screenplay Elements ===== */
+.screenplay-line {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12pt;
+  line-height: 1;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  outline: none;
+  min-height: 12pt;
+  cursor: text;
+  position: relative;
+}
+
+.screenplay-line:empty::before {
+  content: attr(data-placeholder);
+  color: #bbb;
+  pointer-events: none;
+}
+
+.screenplay-line:focus {
+  background: rgba(0, 102, 204, 0.04);
+}
+
+/* Scene Heading */
+.screenplay-line[data-type="scene-heading"] {
+  text-transform: uppercase;
+  font-weight: bold;
+  margin-top: 24pt;
+  margin-bottom: 12pt;
+  padding-left: 0;
+}
+
+/* Action */
+.screenplay-line[data-type="action"] {
+  margin-bottom: 12pt;
+  padding-left: 0;
+}
+
+/* Character */
+.screenplay-line[data-type="character"] {
+  text-transform: uppercase;
+  margin-top: 12pt;
+  margin-bottom: 0;
+  padding-left: 2.2in;
+}
+
+/* Parenthetical */
+.screenplay-line[data-type="parenthetical"] {
+  margin-bottom: 0;
+  padding-left: 1.6in;
+  max-width: 3.6in;
+  margin-left: 1.6in;
+  padding-left: 0;
+}
+
+.screenplay-line[data-type="parenthetical"]::before {
+  content: none;
+}
+
+/* Dialogue */
+.screenplay-line[data-type="dialogue"] {
+  margin-bottom: 0;
+  padding-left: 1in;
+  max-width: 4.5in;
+  margin-left: 1in;
+  padding-left: 0;
+}
+
+/* Transition */
+.screenplay-line[data-type="transition"] {
+  text-transform: uppercase;
+  text-align: right;
+  margin-top: 12pt;
+  margin-bottom: 12pt;
+}
+
+/* ===== Active Element Indicator ===== */
+.screenplay-line:focus::after {
+  content: attr(data-type);
+  position: absolute;
+  right: -1.3in;
+  top: 0;
+  font-size: 8pt;
+  color: #999;
+  text-transform: uppercase;
+  font-weight: normal;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  white-space: nowrap;
+}
+
+/* ===== Page Break Indicator ===== */
+.page-break-marker {
+  border-top: 2px dashed #ccc;
+  margin: 12pt 0;
+  position: relative;
+}
+
+.page-break-marker::after {
+  content: "page break";
+  position: absolute;
+  top: -8px;
+  right: 0;
+  font-size: 8pt;
+  color: #aaa;
+  background: #fff;
+  padding: 0 4px;
+  font-family: -apple-system, sans-serif;
+}
+
+/* ===== Autocomplete Dropdown ===== */
+.autocomplete-dropdown {
+  position: absolute;
+  z-index: 200;
+  background: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12pt;
+}
+
+.autocomplete-item {
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.selected {
+  background: #0066cc;
+  color: #fff;
+}
+
+/* ===== Layout Metrics Overlay (debug) ===== */
+.layout-debug {
+  position: fixed;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.8);
+  color: #0f0;
+  font-family: monospace;
+  font-size: 11px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  z-index: 500;
+  display: none;
+}
+
+.layout-debug.visible {
+  display: block;
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  body { background: #fff; }
+  #toolbar { display: none; }
+  .script-page {
+    box-shadow: none;
+    margin: 0;
+    page-break-after: always;
+  }
+  .screenplay-line:focus::after { display: none; }
+  .layout-debug { display: none !important; }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 9in) {
+  .page, .script-page {
+    width: 100%;
+    min-width: 0;
+    margin: 12px auto;
+  }
+}

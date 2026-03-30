@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Screenplay Editor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="toolbar">
+    <div class="toolbar-group">
+      <button id="btn-new" title="New Script">New</button>
+      <button id="btn-export" title="Export as .fountain">Export</button>
+      <button id="btn-import" title="Import .fountain file">Import</button>
+      <input type="file" id="file-input" accept=".fountain,.txt" hidden>
+    </div>
+    <div class="toolbar-group element-selector">
+      <label for="element-type">Element:</label>
+      <select id="element-type">
+        <option value="scene-heading">Scene Heading</option>
+        <option value="action" selected>Action</option>
+        <option value="character">Character</option>
+        <option value="dialogue">Dialogue</option>
+        <option value="parenthetical">Parenthetical</option>
+        <option value="transition">Transition</option>
+      </select>
+      <span id="shortcut-hint" class="hint"></span>
+    </div>
+    <div class="toolbar-group">
+      <span id="page-indicator">Page 1 of 1</span>
+      <span id="cursor-position"></span>
+    </div>
+  </div>
+
+  <div id="title-page" class="page">
+    <div class="title-page-content">
+      <div class="title-field">
+        <label>Title</label>
+        <input type="text" id="title-input" placeholder="UNTITLED SCREENPLAY" spellcheck="true">
+      </div>
+      <div class="title-field">
+        <label>Written by</label>
+        <input type="text" id="author-input" placeholder="Author Name" spellcheck="true">
+      </div>
+      <div class="title-field">
+        <label>Draft</label>
+        <input type="text" id="draft-input" placeholder="First Draft" spellcheck="true">
+      </div>
+      <div class="title-field">
+        <label>Date</label>
+        <input type="text" id="date-input" spellcheck="false">
+      </div>
+      <div class="title-field">
+        <label>Contact</label>
+        <textarea id="contact-input" rows="3" placeholder="Contact information" spellcheck="true"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div id="editor-container">
+    <!-- Pages are rendered here -->
+  </div>
+
+  <script type="module" src="editor.js"></script>
+</body>
+</html>
