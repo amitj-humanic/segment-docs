@@ -2,9 +2,237 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Screenplay Editor</title>
-  <link rel="stylesheet" href="styles.css">
+  <style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #2a2a2e;
+  color: #ccc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-y: auto;
+}
+
+#toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #1e1e22;
+  border-bottom: 1px solid #444;
+  flex-wrap: wrap;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#toolbar button {
+  padding: 8px 14px;
+  background: #3a3a42;
+  color: #ddd;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#toolbar button:hover { background: #505060; }
+
+#element-type {
+  padding: 8px 8px;
+  background: #3a3a42;
+  color: #ddd;
+  border: 1px solid #555;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+#toolbar label { font-size: 13px; color: #aaa; }
+.hint { font-size: 11px; color: #888; }
+#page-indicator, #cursor-position { font-size: 13px; color: #999; }
+
+.page {
+  width: 8.5in;
+  min-height: 11in;
+  margin: 24px auto;
+  padding: 1in;
+  background: #fff;
+  color: #000;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+}
+
+.title-page-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 9in;
+  gap: 24px;
+}
+
+.title-field { width: 100%; max-width: 5in; text-align: center; }
+
+.title-field label {
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 10pt;
+  color: #666;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.title-field input, .title-field textarea {
+  width: 100%;
+  text-align: center;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12pt;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  padding: 4px 0;
+  background: transparent;
+  outline: none;
+}
+
+.title-field input:focus, .title-field textarea:focus { border-bottom-color: #0066cc; }
+.title-field textarea { resize: none; text-align: center; }
+
+#editor-container { padding-bottom: 100px; }
+
+.script-page {
+  width: 8.5in;
+  min-height: 11in;
+  margin: 24px auto;
+  padding: 1in 1in 0.75in 1.5in;
+  background: #fff;
+  color: #000;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+.script-page .page-number {
+  position: absolute;
+  top: 0.5in;
+  right: 1in;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12pt;
+  color: #000;
+}
+
+.screenplay-line {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12pt;
+  line-height: 1;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  outline: none;
+  min-height: 12pt;
+  cursor: text;
+  position: relative;
+}
+
+.screenplay-line:empty::before {
+  content: attr(data-placeholder);
+  color: #bbb;
+  pointer-events: none;
+}
+
+.screenplay-line:focus { background: rgba(0, 102, 204, 0.04); }
+
+.screenplay-line[data-type="scene-heading"] {
+  text-transform: uppercase;
+  font-weight: bold;
+  margin-top: 24pt;
+  margin-bottom: 12pt;
+}
+
+.screenplay-line[data-type="action"] { margin-bottom: 12pt; }
+
+.screenplay-line[data-type="character"] {
+  text-transform: uppercase;
+  margin-top: 12pt;
+  margin-bottom: 0;
+  padding-left: 2.2in;
+}
+
+.screenplay-line[data-type="parenthetical"] {
+  margin-bottom: 0;
+  max-width: 3.6in;
+  margin-left: 1.6in;
+}
+
+.screenplay-line[data-type="dialogue"] {
+  margin-bottom: 0;
+  max-width: 4.5in;
+  margin-left: 1in;
+}
+
+.screenplay-line[data-type="transition"] {
+  text-transform: uppercase;
+  text-align: right;
+  margin-top: 12pt;
+  margin-bottom: 12pt;
+}
+
+.screenplay-line:focus::after {
+  content: attr(data-type);
+  position: absolute;
+  right: -1.3in;
+  top: 0;
+  font-size: 8pt;
+  color: #999;
+  text-transform: uppercase;
+  font-weight: normal;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  white-space: nowrap;
+}
+
+.autocomplete-dropdown {
+  position: absolute;
+  z-index: 200;
+  background: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12pt;
+}
+
+.autocomplete-item { padding: 8px 12px; cursor: pointer; }
+.autocomplete-item:hover, .autocomplete-item.selected { background: #0066cc; color: #fff; }
+
+@media print {
+  body { background: #fff; }
+  #toolbar { display: none; }
+  .script-page { box-shadow: none; margin: 0; page-break-after: always; }
+  .screenplay-line:focus::after { display: none; }
+}
+
+@media (max-width: 9in) {
+  .page, .script-page {
+    width: 100%;
+    min-width: 0;
+    margin: 12px auto;
+    padding: 0.5in;
+  }
+  .script-page { padding: 0.5in 0.5in 0.5in 0.75in; }
+  .screenplay-line[data-type="character"] { padding-left: 1.2in; }
+  .screenplay-line[data-type="parenthetical"] { margin-left: 0.8in; }
+  .screenplay-line[data-type="dialogue"] { margin-left: 0.5in; }
+  .screenplay-line:focus::after { display: none; }
+  .title-page-content { min-height: auto; padding: 2em 0; }
+}
+  </style>
 </head>
 <body>
   <div id="toolbar">
@@ -57,10 +285,726 @@
     </div>
   </div>
 
-  <div id="editor-container">
-    <!-- Pages are rendered here -->
-  </div>
+  <div id="editor-container"></div>
 
-  <script type="module" src="editor.js"></script>
+  <script type="module">
+// ═══════════════════════════════════════════════════════════════════════════════
+// screenplay-format.js
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const PAGE = { WIDTH: 612, HEIGHT: 792, TOP_MARGIN: 72, BOTTOM_MARGIN: 54, LEFT_MARGIN: 108, RIGHT_MARGIN: 72 };
+const TEXT_AREA = { WIDTH: PAGE.WIDTH - PAGE.LEFT_MARGIN - PAGE.RIGHT_MARGIN, HEIGHT: PAGE.HEIGHT - PAGE.TOP_MARGIN - PAGE.BOTTOM_MARGIN };
+const FONT = { FAMILY: '"Courier New", Courier, monospace', SIZE: 12, LINE_HEIGHT: 12, CSS: '12pt "Courier New", Courier, monospace' };
+const LINES_PER_PAGE = Math.floor(TEXT_AREA.HEIGHT / FONT.LINE_HEIGHT);
+
+const ELEMENTS = {
+  'scene-heading': {
+    label: 'Scene Heading', shortcut: '1', leftIndent: 0, textWidth: TEXT_AREA.WIDTH,
+    spaceBefore: 24, spaceAfter: 12, uppercase: true, bold: true,
+    nextElement: 'action', placeholder: 'INT./EXT. LOCATION - TIME OF DAY',
+    prefixes: ['INT.', 'EXT.', 'INT./EXT.', 'I/E.'],
+  },
+  'action': {
+    label: 'Action', shortcut: '2', leftIndent: 0, textWidth: TEXT_AREA.WIDTH,
+    spaceBefore: 0, spaceAfter: 12, uppercase: false, bold: false,
+    nextElement: 'action', placeholder: 'Describe the action...', prefixes: [],
+  },
+  'character': {
+    label: 'Character', shortcut: '3', leftIndent: 158, textWidth: 274,
+    spaceBefore: 12, spaceAfter: 0, uppercase: true, bold: false,
+    nextElement: 'dialogue', placeholder: 'CHARACTER NAME', prefixes: [],
+  },
+  'dialogue': {
+    label: 'Dialogue', shortcut: '4', leftIndent: 72, textWidth: 252,
+    spaceBefore: 0, spaceAfter: 0, uppercase: false, bold: false,
+    nextElement: 'character', placeholder: 'Dialogue text...', prefixes: [],
+  },
+  'parenthetical': {
+    label: 'Parenthetical', shortcut: '5', leftIndent: 115, textWidth: 180,
+    spaceBefore: 0, spaceAfter: 0, uppercase: false, bold: false,
+    nextElement: 'dialogue', placeholder: '(how they say it)', prefixes: ['('],
+  },
+  'transition': {
+    label: 'Transition', shortcut: '6', leftIndent: 0, textWidth: TEXT_AREA.WIDTH,
+    spaceBefore: 12, spaceAfter: 12, uppercase: true, bold: false,
+    align: 'right', nextElement: 'scene-heading', placeholder: 'CUT TO:',
+    prefixes: ['CUT TO:', 'FADE TO:', 'DISSOLVE TO:', 'SMASH CUT TO:', 'FADE OUT.', 'FADE IN:'],
+  },
+};
+
+function getNextElement(currentType, text) {
+  const el = ELEMENTS[currentType];
+  if (!el) return 'action';
+  if (currentType === 'character') return text.trim() ? 'dialogue' : 'action';
+  if (currentType === 'dialogue') return 'action';
+  if (currentType === 'parenthetical') return 'dialogue';
+  return el.nextElement || 'action';
+}
+
+function detectElementType(line) {
+  const trimmed = line.trim();
+  if (!trimmed) return null;
+  if (/^(INT\.|EXT\.|INT\.\/EXT\.|I\/E\.)/.test(trimmed.toUpperCase())) return 'scene-heading';
+  if (/^[A-Z\s]+TO:$/.test(trimmed) || /^FADE (OUT\.|IN:)$/.test(trimmed)) return 'transition';
+  if (/^[A-Z][A-Z0-9\s.()\-]+$/.test(trimmed) && trimmed.length < 40) return 'character';
+  if (trimmed.startsWith('(') && trimmed.endsWith(')')) return 'parenthetical';
+  return 'action';
+}
+
+function getFontForElement(type) {
+  const el = ELEMENTS[type];
+  return (el && el.bold) ? `bold ${FONT.CSS}` : FONT.CSS;
+}
+
+function getTextWidthForElement(type) {
+  const el = ELEMENTS[type];
+  return el ? el.textWidth : TEXT_AREA.WIDTH;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// pagination.js — PretextJS-powered page layout
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let pretextModule = null;
+
+async function initPretext() {
+  try {
+    pretextModule = await import('https://esm.sh/@chenglou/pretext');
+    console.log('PretextJS loaded successfully');
+    return true;
+  } catch (e) {
+    console.warn('PretextJS not available, using fallback measurement:', e.message);
+    return false;
+  }
+}
+
+function measureText(text, elementType) {
+  if (!text || !text.trim()) return { height: FONT.LINE_HEIGHT, lineCount: 1 };
+  const font = getFontForElement(elementType);
+  const maxWidth = getTextWidthForElement(elementType);
+  if (pretextModule) {
+    try {
+      const prepared = pretextModule.prepare(text, font);
+      const result = pretextModule.layout(prepared, maxWidth, FONT.LINE_HEIGHT);
+      return { height: result.height, lineCount: result.lineCount };
+    } catch (e) {
+      console.warn('PretextJS measurement failed, using fallback:', e.message);
+    }
+  }
+  return fallbackMeasure(text, maxWidth);
+}
+
+const CHAR_WIDTH = 7.2;
+
+function fallbackMeasure(text, maxWidth) {
+  const charsPerLine = Math.floor(maxWidth / CHAR_WIDTH);
+  if (charsPerLine <= 0) return { height: FONT.LINE_HEIGHT, lineCount: 1 };
+  const words = text.split(/\s+/);
+  let lineCount = 1, currentLineLength = 0;
+  for (const word of words) {
+    if (currentLineLength + word.length + (currentLineLength > 0 ? 1 : 0) > charsPerLine) {
+      lineCount++;
+      currentLineLength = word.length;
+    } else {
+      currentLineLength += (currentLineLength > 0 ? 1 : 0) + word.length;
+    }
+  }
+  return { height: lineCount * FONT.LINE_HEIGHT, lineCount };
+}
+
+class MeasuredElement {
+  constructor(lineData, index) {
+    this.index = index;
+    this.type = lineData.type;
+    this.text = lineData.text;
+    const el = ELEMENTS[this.type] || ELEMENTS['action'];
+    this.spaceBefore = el.spaceBefore;
+    this.spaceAfter = el.spaceAfter;
+    const measurement = measureText(this.text, this.type);
+    this.textHeight = measurement.height;
+    this.lineCount = measurement.lineCount;
+    this.totalHeight = this.spaceBefore + this.textHeight + this.spaceAfter;
+  }
+}
+
+function paginate(lines) {
+  if (!lines || lines.length === 0) return [{ elements: [], pageNumber: 1 }];
+  const measured = lines.map((line, i) => new MeasuredElement(line, i));
+  const pages = [];
+  let currentPage = { elements: [], pageNumber: 1 };
+  let remainingHeight = TEXT_AREA.HEIGHT;
+
+  for (let i = 0; i < measured.length; i++) {
+    const el = measured[i];
+    const heightNeeded = el.totalHeight;
+    if (remainingHeight >= heightNeeded || currentPage.elements.length === 0) {
+      currentPage.elements.push(el.index);
+      remainingHeight -= heightNeeded;
+    } else {
+      const breakResult = applyBreakRules(measured, i, currentPage);
+      if (breakResult.moveBack > 0) {
+        const movedIndices = currentPage.elements.splice(-breakResult.moveBack);
+        pages.push(currentPage);
+        currentPage = { elements: [...movedIndices, el.index], pageNumber: pages.length + 1 };
+        remainingHeight = TEXT_AREA.HEIGHT;
+        for (const idx of currentPage.elements) remainingHeight -= measured[idx].totalHeight;
+      } else {
+        pages.push(currentPage);
+        currentPage = { elements: [el.index], pageNumber: pages.length + 1 };
+        remainingHeight = TEXT_AREA.HEIGHT - heightNeeded;
+      }
+    }
+  }
+  if (currentPage.elements.length > 0) pages.push(currentPage);
+  return pages.length > 0 ? pages : [{ elements: [], pageNumber: 1 }];
+}
+
+function applyBreakRules(measured, currentIndex, currentPage) {
+  const pageElements = currentPage.elements;
+  if (pageElements.length === 0) return { moveBack: 0 };
+  const lastIdx = pageElements[pageElements.length - 1];
+  const lastEl = measured[lastIdx];
+  const currentEl = measured[currentIndex];
+
+  if (lastEl.type === 'character') return { moveBack: 1 };
+  if (lastEl.type === 'parenthetical' && pageElements.length >= 2) {
+    const secondLastIdx = pageElements[pageElements.length - 2];
+    if (measured[secondLastIdx].type === 'character') return { moveBack: 2 };
+    return { moveBack: 1 };
+  }
+  if (lastEl.type === 'scene-heading') return { moveBack: 1 };
+  if (currentEl.type === 'dialogue' && lastEl.type === 'character') return { moveBack: 1 };
+  return { moveBack: 0 };
+}
+
+function getLayoutMetrics(lines) {
+  const pages = paginate(lines);
+  const measured = lines.map((line, i) => new MeasuredElement(line, i));
+  let totalLines = 0;
+  for (const m of measured) totalLines += m.lineCount;
+  return { pageCount: pages.length, elementCount: lines.length, totalWrappedLines: totalLines, pages };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// autocomplete.js
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class AutocompleteEngine {
+  constructor() {
+    this.sceneHeadings = new Set();
+    this.characters = new Set();
+    this.transitions = new Set(['CUT TO:', 'FADE TO:', 'DISSOLVE TO:', 'SMASH CUT TO:', 'FADE OUT.', 'FADE IN:', 'MATCH CUT TO:', 'JUMP CUT TO:', 'WIPE TO:', 'IRIS OUT.']);
+    this.locations = new Set();
+    this.timesOfDay = ['DAY', 'NIGHT', 'DAWN', 'DUSK', 'MORNING', 'AFTERNOON', 'EVENING', 'CONTINUOUS', 'LATER', 'MOMENTS LATER'];
+    this.dropdownEl = null;
+    this.selectedIndex = -1;
+    this.currentSuggestions = [];
+    this.onSelect = null;
+  }
+
+  indexScript(lines) {
+    this.sceneHeadings.clear(); this.characters.clear(); this.locations.clear();
+    for (const line of lines) {
+      if (line.type === 'scene-heading' && line.text.trim()) {
+        this.sceneHeadings.add(line.text.trim().toUpperCase());
+        const match = line.text.match(/(?:INT\.|EXT\.|INT\.\/EXT\.|I\/E\.)\s*(.+?)(?:\s*-\s*.+)?$/i);
+        if (match) this.locations.add(match[1].trim().toUpperCase());
+      }
+      if (line.type === 'character' && line.text.trim()) {
+        const name = line.text.trim().toUpperCase().replace(/\s*\(.*?\)\s*$/, '').trim();
+        if (name) this.characters.add(name);
+      }
+    }
+  }
+
+  getSuggestions(type, partialText) {
+    const text = (partialText || '').toUpperCase().trim();
+    if (!text) return [];
+    let pool = [];
+    switch (type) {
+      case 'scene-heading':
+        pool = [...this.sceneHeadings];
+        if (/^(INT\.|EXT\.|INT\.\/EXT\.|I\/E\.)\s*/i.test(text)) {
+          const prefix = text.match(/^(INT\.|EXT\.|INT\.\/EXT\.|I\/E\.)\s*/i)[0];
+          const rest = text.slice(prefix.length);
+          for (const loc of this.locations) {
+            if (loc.startsWith(rest) && rest !== loc)
+              for (const time of this.timesOfDay) pool.push(`${prefix}${loc} - ${time}`);
+          }
+        }
+        break;
+      case 'character': pool = [...this.characters]; break;
+      case 'transition': pool = [...this.transitions]; break;
+      default: return [];
+    }
+    const filtered = pool.filter(item => item.startsWith(text) && item !== text);
+    return [...new Set(filtered)].slice(0, 8);
+  }
+
+  show(targetEl, suggestions, onSelect) {
+    this.hide();
+    if (suggestions.length === 0) return;
+    this.currentSuggestions = suggestions;
+    this.onSelect = onSelect;
+    this.selectedIndex = 0;
+    this.dropdownEl = document.createElement('div');
+    this.dropdownEl.className = 'autocomplete-dropdown';
+    for (let i = 0; i < suggestions.length; i++) {
+      const item = document.createElement('div');
+      item.className = 'autocomplete-item' + (i === 0 ? ' selected' : '');
+      item.textContent = suggestions[i];
+      item.addEventListener('mousedown', (e) => { e.preventDefault(); this.selectItem(i); });
+      this.dropdownEl.appendChild(item);
+    }
+    const rect = targetEl.getBoundingClientRect();
+    this.dropdownEl.style.left = `${rect.left}px`;
+    this.dropdownEl.style.top = `${rect.bottom + 2}px`;
+    this.dropdownEl.style.minWidth = `${rect.width}px`;
+    document.body.appendChild(this.dropdownEl);
+  }
+
+  hide() {
+    if (this.dropdownEl) { this.dropdownEl.remove(); this.dropdownEl = null; }
+    this.currentSuggestions = [];
+    this.selectedIndex = -1;
+    this.onSelect = null;
+  }
+
+  handleKey(e) {
+    if (!this.dropdownEl) return false;
+    if (e.key === 'ArrowDown') { e.preventDefault(); this.selectedIndex = Math.min(this.selectedIndex + 1, this.currentSuggestions.length - 1); this.updateSelection(); return true; }
+    if (e.key === 'ArrowUp') { e.preventDefault(); this.selectedIndex = Math.max(this.selectedIndex - 1, 0); this.updateSelection(); return true; }
+    if (e.key === 'Enter' || e.key === 'Tab') { if (this.selectedIndex >= 0) { e.preventDefault(); this.selectItem(this.selectedIndex); return true; } }
+    if (e.key === 'Escape') { this.hide(); return true; }
+    return false;
+  }
+
+  selectItem(index) {
+    if (index >= 0 && index < this.currentSuggestions.length && this.onSelect) this.onSelect(this.currentSuggestions[index]);
+    this.hide();
+  }
+
+  updateSelection() {
+    if (!this.dropdownEl) return;
+    const items = this.dropdownEl.querySelectorAll('.autocomplete-item');
+    items.forEach((item, i) => item.classList.toggle('selected', i === this.selectedIndex));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// fountain-io.js
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function parseFountain(source) {
+  const titlePage = {};
+  let body = source;
+  const titleMatch = source.match(/^((?:[A-Za-z ]+:.+\n?)+)\n\n/);
+  if (titleMatch) {
+    const titleBlock = titleMatch[1];
+    body = source.slice(titleMatch[0].length);
+    for (const line of titleBlock.split('\n')) {
+      const kv = line.match(/^([A-Za-z ]+):\s*(.*)$/);
+      if (kv) titlePage[kv[1].trim().toLowerCase()] = kv[2].trim();
+    }
+  }
+  const rawLines = body.split('\n');
+  const lines = [];
+  let i = 0;
+  while (i < rawLines.length) {
+    const trimmed = rawLines[i].trim();
+    if (!trimmed) { i++; continue; }
+    if (trimmed.startsWith('.') && !trimmed.startsWith('..')) { lines.push({ type: 'scene-heading', text: trimmed.slice(1).trim() }); i++; continue; }
+    if (trimmed.startsWith('>') && !trimmed.endsWith('<')) { lines.push({ type: 'transition', text: trimmed.slice(1).trim() }); i++; continue; }
+    if (trimmed.startsWith('>') && trimmed.endsWith('<')) { lines.push({ type: 'action', text: trimmed.slice(1, -1).trim() }); i++; continue; }
+    if (trimmed.startsWith('@')) {
+      lines.push({ type: 'character', text: trimmed.slice(1).trim() }); i++;
+      while (i < rawLines.length && rawLines[i].trim()) {
+        const t = rawLines[i].trim();
+        lines.push({ type: (t.startsWith('(') && t.endsWith(')')) ? 'parenthetical' : 'dialogue', text: t }); i++;
+      }
+      continue;
+    }
+    if (/^(INT\.|EXT\.|INT\.\/EXT\.|I\/E\.|EST\.)/i.test(trimmed)) { lines.push({ type: 'scene-heading', text: trimmed }); i++; continue; }
+    if ((/^[A-Z\s]+TO:$/.test(trimmed) || /^FADE (OUT\.|IN:)$/.test(trimmed)) && (i === 0 || !rawLines[i - 1].trim())) { lines.push({ type: 'transition', text: trimmed }); i++; continue; }
+    if (/^[A-Z][A-Z0-9\s.()\-']+$/.test(trimmed) && trimmed.length < 50) {
+      const prevEmpty = i === 0 || !rawLines[i - 1].trim();
+      const nextExists = i + 1 < rawLines.length && rawLines[i + 1].trim();
+      if (prevEmpty && nextExists) {
+        lines.push({ type: 'character', text: trimmed }); i++;
+        while (i < rawLines.length && rawLines[i].trim()) {
+          const t = rawLines[i].trim();
+          lines.push({ type: (t.startsWith('(') && t.endsWith(')')) ? 'parenthetical' : 'dialogue', text: t }); i++;
+        }
+        continue;
+      }
+    }
+    if (trimmed.startsWith('(') && trimmed.endsWith(')')) { lines.push({ type: 'parenthetical', text: trimmed }); i++; continue; }
+    let actionText = trimmed; i++;
+    while (i < rawLines.length && rawLines[i].trim()) { actionText += ' ' + rawLines[i].trim(); i++; }
+    lines.push({ type: 'action', text: actionText });
+  }
+  return { titlePage, lines };
+}
+
+function toFountain(titlePage, lines) {
+  let output = '';
+  if (titlePage.title) output += `Title: ${titlePage.title}\n`;
+  if (titlePage.author) output += `Author: ${titlePage.author}\n`;
+  if (titlePage.draft) output += `Draft date: ${titlePage.draft}\n`;
+  if (titlePage.date) output += `Date: ${titlePage.date}\n`;
+  if (titlePage.contact) output += `Contact: ${titlePage.contact}\n`;
+  if (output) output += '\n\n';
+  let prevType = null;
+  for (const line of lines) {
+    const text = line.text || '';
+    switch (line.type) {
+      case 'scene-heading':
+        if (prevType !== null) output += '\n';
+        output += (/^(INT\.|EXT\.|INT\.\/EXT\.|I\/E\.)/i.test(text) ? text.toUpperCase() : '.' + text.toUpperCase()) + '\n';
+        break;
+      case 'action':
+        if (prevType !== null && prevType !== 'action') output += '\n';
+        output += text + '\n'; break;
+      case 'character':
+        output += '\n' + text.toUpperCase() + '\n'; break;
+      case 'parenthetical':
+        output += (text.startsWith('(') ? text : `(${text})`) + '\n'; break;
+      case 'dialogue':
+        output += text + '\n'; break;
+      case 'transition':
+        output += '\n';
+        output += ((/TO:$/.test(text) || /^FADE/.test(text)) ? text.toUpperCase() : '>' + text.toUpperCase()) + '\n';
+        break;
+      default: output += text + '\n';
+    }
+    prevType = line.type;
+  }
+  return output;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// editor.js — Main editor
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const state = {
+  titlePage: { title: '', author: '', draft: '', date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), contact: '' },
+  lines: [{ type: 'scene-heading', text: '' }],
+  activeLine: 0,
+  pretextReady: false,
+};
+
+const autocomplete = new AutocompleteEngine();
+
+const editorContainer = document.getElementById('editor-container');
+const elementTypeSelect = document.getElementById('element-type');
+const shortcutHint = document.getElementById('shortcut-hint');
+const pageIndicator = document.getElementById('page-indicator');
+const cursorPosition = document.getElementById('cursor-position');
+const btnNew = document.getElementById('btn-new');
+const btnExport = document.getElementById('btn-export');
+const btnImport = document.getElementById('btn-import');
+const fileInput = document.getElementById('file-input');
+const titleInput = document.getElementById('title-input');
+const authorInput = document.getElementById('author-input');
+const draftInput = document.getElementById('draft-input');
+const dateInput = document.getElementById('date-input');
+const contactInput = document.getElementById('contact-input');
+
+async function init() {
+  state.pretextReady = await initPretext();
+  dateInput.value = state.titlePage.date;
+  titleInput.addEventListener('input', () => { state.titlePage.title = titleInput.value; });
+  authorInput.addEventListener('input', () => { state.titlePage.author = authorInput.value; });
+  draftInput.addEventListener('input', () => { state.titlePage.draft = draftInput.value; });
+  dateInput.addEventListener('input', () => { state.titlePage.date = dateInput.value; });
+  contactInput.addEventListener('input', () => { state.titlePage.contact = contactInput.value; });
+
+  elementTypeSelect.addEventListener('change', () => {
+    const idx = state.activeLine;
+    if (idx >= 0 && idx < state.lines.length) { state.lines[idx].type = elementTypeSelect.value; render(); focusLine(idx); }
+  });
+
+  btnNew.addEventListener('click', () => {
+    if (confirm('Start a new screenplay? Unsaved changes will be lost.')) {
+      state.lines = [{ type: 'scene-heading', text: '' }]; state.activeLine = 0;
+      state.titlePage = { title: '', author: '', draft: '', date: dateInput.value, contact: '' };
+      titleInput.value = ''; authorInput.value = ''; draftInput.value = ''; contactInput.value = '';
+      render(); focusLine(0);
+    }
+  });
+
+  btnExport.addEventListener('click', exportScript);
+  btnImport.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', importScript);
+
+  render();
+  requestAnimationFrame(() => focusLine(0));
+  updateShortcutHint();
+}
+
+function updateShortcutHint() {
+  const el = ELEMENTS[elementTypeSelect.value];
+  if (el) shortcutHint.textContent = `Ctrl+${el.shortcut}`;
+}
+
+let renderScheduled = false;
+function scheduleRender() {
+  if (!renderScheduled) { renderScheduled = true; requestAnimationFrame(() => { renderScheduled = false; render(); }); }
+}
+
+function render() {
+  const metrics = getLayoutMetrics(state.lines);
+  const pages = metrics.pages;
+  const activePage = findPageForLine(pages, state.activeLine);
+  pageIndicator.textContent = `Page ${activePage} of ${pages.length}`;
+  editorContainer.innerHTML = '';
+
+  for (const page of pages) {
+    const pageEl = document.createElement('div');
+    pageEl.className = 'script-page';
+    if (page.pageNumber > 1) {
+      const pageNum = document.createElement('div');
+      pageNum.className = 'page-number';
+      pageNum.textContent = `${page.pageNumber}.`;
+      pageEl.appendChild(pageNum);
+    }
+    for (const lineIdx of page.elements) {
+      const lineData = state.lines[lineIdx];
+      if (!lineData) continue;
+      pageEl.appendChild(createLineElement(lineData, lineIdx));
+    }
+    editorContainer.appendChild(pageEl);
+  }
+}
+
+function createLineElement(lineData, index) {
+  const el = document.createElement('div');
+  el.className = 'screenplay-line';
+  el.dataset.type = lineData.type;
+  el.dataset.index = index;
+  el.contentEditable = 'true';
+  el.spellcheck = true;
+  const elDef = ELEMENTS[lineData.type];
+  if (elDef) el.dataset.placeholder = elDef.placeholder;
+  if (lineData.text) el.textContent = lineData.text;
+  el.addEventListener('input', (e) => onLineInput(e, index));
+  el.addEventListener('keydown', (e) => onLineKeydown(e, index));
+  el.addEventListener('focus', () => onLineFocus(index));
+  el.addEventListener('blur', () => onLineBlur(index));
+  return el;
+}
+
+function onLineInput(e, index) {
+  const el = e.target;
+  state.lines[index].text = el.textContent;
+  const type = state.lines[index].type;
+  if (['scene-heading', 'character', 'transition'].includes(type)) {
+    const suggestions = autocomplete.getSuggestions(type, el.textContent);
+    if (suggestions.length > 0) {
+      autocomplete.show(el, suggestions, (selected) => { el.textContent = selected; state.lines[index].text = selected; placeCaretAtEnd(el); });
+    } else { autocomplete.hide(); }
+  }
+  scheduleRender();
+}
+
+function onLineKeydown(e, index) {
+  if (autocomplete.handleKey(e)) return;
+
+  if (e.ctrlKey && !e.shiftKey && !e.altKey) {
+    for (const [type, def] of Object.entries(ELEMENTS)) {
+      if (e.key === def.shortcut) {
+        e.preventDefault(); state.lines[index].type = type; elementTypeSelect.value = type;
+        updateShortcutHint(); render(); focusLine(index); return;
+      }
+    }
+  }
+
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault(); autocomplete.hide();
+    const currentType = state.lines[index].type;
+    const currentText = state.lines[index].text;
+    const nextType = getNextElement(currentType, currentText);
+    if (!currentText.trim() && state.lines.length > 1 && currentType !== 'action') {
+      state.lines[index].type = 'action'; elementTypeSelect.value = 'action';
+      render(); focusLine(index); return;
+    }
+    state.lines.splice(index + 1, 0, { type: nextType, text: '' });
+    state.activeLine = index + 1;
+    autocomplete.indexScript(state.lines);
+    render(); focusLine(index + 1);
+    elementTypeSelect.value = nextType; updateShortcutHint(); return;
+  }
+
+  if (e.key === 'Backspace') {
+    if (e.target.textContent === '' && index > 0) {
+      e.preventDefault(); state.lines.splice(index, 1); state.activeLine = index - 1;
+      render(); focusLine(index - 1, 'end'); return;
+    }
+  }
+
+  if (e.key === 'Tab' && !e.shiftKey) {
+    e.preventDefault();
+    const types = Object.keys(ELEMENTS);
+    const nextIdx = (types.indexOf(state.lines[index].type) + 1) % types.length;
+    state.lines[index].type = types[nextIdx]; elementTypeSelect.value = types[nextIdx];
+    updateShortcutHint(); render(); focusLine(index); return;
+  }
+
+  if (e.key === 'Tab' && e.shiftKey) {
+    e.preventDefault();
+    const types = Object.keys(ELEMENTS);
+    const nextIdx = (types.indexOf(state.lines[index].type) - 1 + types.length) % types.length;
+    state.lines[index].type = types[nextIdx]; elementTypeSelect.value = types[nextIdx];
+    updateShortcutHint(); render(); focusLine(index); return;
+  }
+
+  if (e.key === 'ArrowUp' && index > 0 && isCaretAtStart(e.target)) { e.preventDefault(); focusLine(index - 1, 'end'); return; }
+  if (e.key === 'ArrowDown' && index < state.lines.length - 1 && isCaretAtEnd(e.target)) { e.preventDefault(); focusLine(index + 1, 'start'); return; }
+}
+
+function onLineFocus(index) {
+  state.activeLine = index;
+  const line = state.lines[index];
+  if (line) { elementTypeSelect.value = line.type; updateShortcutHint(); }
+  updateCursorPosition();
+}
+
+function onLineBlur(index) {
+  autocomplete.hide();
+  const line = state.lines[index];
+  if (line && line.type === 'action' && line.text.trim()) {
+    const detected = detectAutoType(line.text);
+    if (detected && detected !== 'action') { line.type = detected; scheduleRender(); }
+  }
+}
+
+function detectAutoType(text) {
+  const trimmed = text.trim();
+  if (/^(INT\.|EXT\.|INT\.\/EXT\.|I\/E\.)/i.test(trimmed)) return 'scene-heading';
+  if (/^[A-Z\s]+TO:$/.test(trimmed) || /^FADE (OUT\.|IN:)$/.test(trimmed)) return 'transition';
+  return null;
+}
+
+function focusLine(index, caretPos = 'end') {
+  const lineEl = editorContainer.querySelector(`[data-index="${index}"]`);
+  if (!lineEl) return;
+  lineEl.focus();
+  if (caretPos === 'end') placeCaretAtEnd(lineEl); else placeCaretAtStart(lineEl);
+  lineEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  updateCursorPosition();
+}
+
+function placeCaretAtEnd(el) {
+  const range = document.createRange(); const sel = window.getSelection();
+  if (el.childNodes.length > 0) { const last = el.childNodes[el.childNodes.length - 1]; range.setStart(last, last.length || 0); }
+  else { range.setStart(el, 0); }
+  range.collapse(true); sel.removeAllRanges(); sel.addRange(range);
+}
+
+function placeCaretAtStart(el) {
+  const range = document.createRange(); const sel = window.getSelection();
+  range.setStart(el, 0); range.collapse(true); sel.removeAllRanges(); sel.addRange(range);
+}
+
+function isCaretAtStart(el) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return false;
+  const range = sel.getRangeAt(0);
+  return range.startOffset === 0 && (range.startContainer === el.firstChild || range.startContainer === el);
+}
+
+function isCaretAtEnd(el) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return false;
+  const range = sel.getRangeAt(0);
+  const node = range.endContainer;
+  return range.endOffset === (node.length || node.childNodes.length);
+}
+
+function updateCursorPosition() {
+  const line = state.lines[state.activeLine];
+  if (line) cursorPosition.textContent = `Line ${state.activeLine + 1} · ${ELEMENTS[line.type]?.label || line.type}`;
+}
+
+function findPageForLine(pages, lineIndex) {
+  for (const page of pages) { if (page.elements.includes(lineIndex)) return page.pageNumber; }
+  return 1;
+}
+
+function exportScript() {
+  const data = { title: titleInput.value || 'Untitled', author: authorInput.value, draft: draftInput.value, date: dateInput.value, contact: contactInput.value };
+  const fountain = toFountain(data, state.lines);
+  const blob = new Blob([fountain], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = `${(titleInput.value || 'screenplay').replace(/\s+/g, '_')}.fountain`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function importScript(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const parsed = parseFountain(event.target.result);
+    if (parsed.titlePage.title) { titleInput.value = parsed.titlePage.title; state.titlePage.title = parsed.titlePage.title; }
+    if (parsed.titlePage.author) { authorInput.value = parsed.titlePage.author; state.titlePage.author = parsed.titlePage.author; }
+    if (parsed.titlePage['draft date']) { draftInput.value = parsed.titlePage['draft date']; state.titlePage.draft = parsed.titlePage['draft date']; }
+    if (parsed.titlePage.contact) { contactInput.value = parsed.titlePage.contact; state.titlePage.contact = parsed.titlePage.contact; }
+    state.lines = parsed.lines.length > 0 ? parsed.lines : [{ type: 'scene-heading', text: '' }];
+    state.activeLine = 0;
+    autocomplete.indexScript(state.lines);
+    render(); focusLine(0);
+  };
+  reader.readAsText(file);
+  fileInput.value = '';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 's') { e.preventDefault(); exportScript(); }
+  if (e.ctrlKey && e.key === 'o') { e.preventDefault(); fileInput.click(); }
+  if (e.ctrlKey && e.key === 'n') { e.preventDefault(); btnNew.click(); }
+});
+
+// Load sample script
+state.lines = [
+  { type: 'scene-heading', text: 'INT. COFFEE SHOP - MORNING' },
+  { type: 'action', text: 'A busy coffee shop in downtown Los Angeles. Sunlight streams through floor-to-ceiling windows. ALEX (30s, disheveled but sharp) sits at a corner table, laptop open, three empty cups beside them.' },
+  { type: 'character', text: 'ALEX' },
+  { type: 'parenthetical', text: '(muttering to screen)' },
+  { type: 'dialogue', text: "Come on, come on... just one more line of code and we're done." },
+  { type: 'action', text: 'JORDAN (late 20s, immaculate, carrying two fresh coffees) slides into the seat across from Alex.' },
+  { type: 'character', text: 'JORDAN' },
+  { type: 'dialogue', text: 'You said that three hours ago. And six hours before that.' },
+  { type: 'character', text: 'ALEX' },
+  { type: 'dialogue', text: 'This time I mean it. The text measurement algorithm is almost perfect.' },
+  { type: 'character', text: 'JORDAN' },
+  { type: 'parenthetical', text: '(sliding a coffee over)' },
+  { type: 'dialogue', text: 'Perfect enough to ship?' },
+  { type: 'action', text: 'Alex takes the coffee without looking up. Types furiously. Then stops. A slow grin spreads across their face.' },
+  { type: 'character', text: 'ALEX' },
+  { type: 'dialogue', text: 'It works. Every line breaks exactly where it should. Every page is exactly fifty-five lines. It actually works.' },
+  { type: 'character', text: 'JORDAN' },
+  { type: 'parenthetical', text: '(leaning over to look)' },
+  { type: 'dialogue', text: 'Is that... a screenplay editor?' },
+  { type: 'character', text: 'ALEX' },
+  { type: 'dialogue', text: 'Not just any editor. It uses PretextJS for the layout engine. Sub-millisecond text measurement. Zero DOM reflows. Perfect pagination.' },
+  { type: 'character', text: 'JORDAN' },
+  { type: 'dialogue', text: 'You built a screenplay editor... to procrastinate on your actual screenplay?' },
+  { type: 'action', text: 'Beat.' },
+  { type: 'character', text: 'ALEX' },
+  { type: 'dialogue', text: '...I prefer to call it research.' },
+  { type: 'transition', text: 'CUT TO:' },
+  { type: 'scene-heading', text: 'EXT. COFFEE SHOP - CONTINUOUS' },
+  { type: 'action', text: 'Through the window, we see Alex animatedly demonstrating the editor to Jordan, who shakes their head but smiles.' },
+  { type: 'transition', text: 'FADE OUT.' },
+];
+titleInput.value = 'THE PERFECT PAGE';
+authorInput.value = 'A. Programmer';
+state.titlePage.title = 'THE PERFECT PAGE';
+state.titlePage.author = 'A. Programmer';
+autocomplete.indexScript(state.lines);
+
+init();
+  </script>
 </body>
 </html>
